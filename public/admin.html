@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Microsoft YaHei',sans-serif}
+body{background:#f5f5f5;padding:20px;max-width:900px;margin:0 auto;font-size:14px}
+h1{font-size:20px;color:#1a1a1a;margin-bottom:20px}
+
+/* 登录 */
+#login{text-align:center;margin-top:100px}
+#login input{padding:10px 14px;font-size:15px;border:1px solid #ddd;border-radius:6px;width:220px;outline:none}
+#login input:focus{border-color:#1C3A5E}
+#login button{padding:10px 24px;font-size:15px;background:#1C3A5E;color:#fff;border:none;border-radius:6px;margin-left:8px;cursor:pointer}
+#login .err{color:#e74c3c;margin-top:8px;display:none}
+
+/* 主体 */
+#main{display:none}
+
+/* 表单 */
+.form-section{background:#fff;border-radius:10px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.form-section label{display:block;font-weight:600;color:#333;margin-bottom:6px}
+.form-section input[type=text]{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;outline:none;margin-bottom:14px}
+.form-section input[type=text]:focus{border-color:#1C3A5E}
+.form-section textarea{width:100%;min-height:120px;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;outline:none;resize:vertical;margin-bottom:14px;line-height:1.6}
+.form-section textarea:focus{border-color:#1C3A5E}
+
+/* 文件上传 */
+.file-area{border:2px dashed #ddd;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:14px;color:#999;font-size:13px}
+.file-area:hover{border-color:#1C3A5E;color:#1C3A5E}
+.file-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.file-item{background:#f0f4f8;border-radius:6px;padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:6px}
+.file-item .del{cursor:pointer;color:#e74c3c;font-weight:700}
+
+/* 按钮 */
+.btn{padding:10px 28px;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-weight:500}
+.btn-primary{background:#1C3A5E;color:#fff}
+.btn-danger{background:#e74c3c;color:#fff}
+.btn-outline{background:transparent;border:1px solid #ddd;color:#666}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* 已发布内容 */
+.item-card{background:#fff;border-radius:10px;padding:16px 20px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative}
+.item-card h3{font-size:15px;margin-bottom:4px}
+.item-card .meta{font-size:12px;color:#999;margin-bottom:6px}
+.item-card .preview{font-size:13px;color:#555;line-height:1.5;margin-bottom:8px}
+.item-card .actions{display:flex;gap:8px}
+.item-card .link{font-size:12px;color:#1C3A5E;cursor:pointer;text-decoration:underline}
+.tip{font-size:12px;color:#999;margin-top:8px}
+
+/* 预览弹窗 */
+.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:100;justify-content:center;align-items:center}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto}
+.modal-box h2{margin-bottom:10px;font-size:18px}
+.modal-box .content{line-height:1.6;color:#333;margin-bottom:14px;font-size:14px;white-space:pre-wrap}
+.modal-box .files a{display:block;color:#1C3A5E;text-decoration:underline;font-size:13px;margin:4px 0}
+.modal-close{float:right;cursor:pointer;font-size:20px;color:#999;margin-top:-4px}
+</style>
+</head>
+<body>
+<h1>🔐 内容管理</h1>
+
+<!-- 登录 -->
+<div id="login">
+  <input type="password" id="pwd" placeholder="请输入管理密码" />
+  <button onclick="login()">进入</button>
+  <div class="err" id="err">密码错误</div>
+</div>
+
+<!-- 主界面 -->
+<div id="main">
+  <!-- 新建内容 -->
+  <div class="form-section">
+    <label>标题</label>
+    <input type="text" id="title" placeholder="输入标题" />
+
+    <label>正文内容</label>
+    <textarea id="content" placeholder="在这里写内容，支持文字、链接等"></textarea>
+
+    <label>上传文件 / 图片</label>
+    <div class="file-area" id="fileArea" onclick="document.getElementById('fileInput').click()">
+      📁 点击选择文件（图片、文档等，单次最多 50MB）
+    </div>
+    <input type="file" id="fileInput" multiple style="display:none" onchange="uploadFiles(this.files)" />
+    <div class="file-list" id="fileList"></div>
+    <div class="file-list" id="fileUrls"></div>
+
+    <div class="row">
+      <button class="btn btn-primary" onclick="preview()">👁️ 预览</button>
+      <button class="btn btn-primary" onclick="publish()" id="pubBtn">📤 发布</button>
+      <button class="btn btn-outline" onclick="clearForm()">清空</button>
+    </div>
+    <div class="tip" id="statusTip"></div>
+  </div>
+
+  <!-- 已发布 -->
+  <div class="form-section">
+    <label>已发布</label>
+    <div id="items"></div>
+  </div>
+</div>
+
+<!-- 预览弹窗 -->
+<div class="modal" id="previewModal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closePreview()">&times;</span>
+    <h2 id="previewTitle"></h2>
+    <div class="content" id="previewContent"></div>
+    <div class="files" id="previewFiles"></div>
+  </div>
+</div>
+
+<script>
+let token = '';
+let uploaded = [];
+
+// 登录
+async function login(){
+  const pwd=document.getElementById('pwd').value;
+  const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd})});
+  const d=await res.json();
+  if(d.success){
+    token=pwd;
+    document.getElementById('login').style.display='none';
+    document.getElementById('main').style.display='block';
+    loadItems();
+  }else{
+    document.getElementById('err').style.display='block';
+  }
+}
+
+// 上传文件
+async function uploadFiles(files){
+  for(const f of files){
+    const fd=new FormData();
+    fd.append('file',f);
+    fd.append('password',token);
+    setTip('上传中：'+f.name+'...');
+    const res=await fetch('/api/upload',{method:'POST',body:fd});
+    const d=await res.json();
+    if(d.success){
+      uploaded.push({url:d.url,name:d.name});
+      renderFiles();
+    }
+  }
+  setTip('上传完成');
+}
+
+function renderFiles(){
+  const el=document.getElementById('fileList');
+  el.innerHTML=uploaded.map((f,i)=>`<div class="file-item">${f.name} <span class="del" onclick="delFile(${i})">✕</span></div>`).join('');
+}
+
+function delFile(i){
+  uploaded.splice(i,1);
+  renderFiles();
+}
+
+// 发布
+async function publish(){
+  const title=document.getElementById('title').value.trim()||'无标题';
+  const content=document.getElementById('content').value.trim();
+  if(!content&&!uploaded.length){setTip('至少填写内容或上传文件');return}
+  document.getElementById('pubBtn').disabled=true;
+  setTip('发布中...');
+  const res=await fetch('/api/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:token,title,content,files:uploaded})});
+  const d=await res.json();
+  if(d.success){
+    setTip('✅ 已发布！链接：'+window.location.origin+'/item/'+d.id);
+    clearForm();
+    loadItems();
+  }else{
+    setTip('❌ 发布失败：'+d.error);
+  }
+  document.getElementById('pubBtn').disabled=false;
+}
+
+// 加载已发布
+async function loadItems(){
+  const res=await fetch('/api/items');
+  const items=await res.json();
+  const el=document.getElementById('items');
+  if(!items.length){el.innerHTML='<div class="tip" style="margin-top:4px">暂无内容</div>';return}
+  el.innerHTML=items.map(i=>{
+    const link=window.location.origin+'/item/'+i.id;
+    return `<div class="item-card">
+      <h3>${i.title||'无标题'}</h3>
+      <div class="meta">${new Date(i.createdAt).toLocaleString('zh-CN')}</div>
+      <div class="preview">${(i.content||'').slice(0,80)}</div>
+      <div class="actions">
+        <span class="link" onclick="copyLink('${link}')">📋 复制分享链接</span>
+        <span class="link" onclick="previewItem('${i.id}')">👁️ 预览</span>
+        <span class="link" style="color:#e74c3c" onclick="deleteItem('${i.id}')">🗑️ 删除</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteItem(id){
+  if(!confirm('确定删除？')) return;
+  await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:token,id})});
+  loadItems();
+}
+
+function copyLink(url){navigator.clipboard.writeText(url);setTip('✅ 链接已复制')}
+
+// 预览 - 发布前
+function preview(){
+  const title=document.getElementById('title').value.trim()||'无标题';
+  const content=document.getElementById('content').value.trim();
+  document.getElementById('previewTitle').textContent=title;
+  document.getElementById('previewContent').textContent=content||'(空)';
+  const filesEl=document.getElementById('previewFiles');
+  if(uploaded.length){
+    filesEl.innerHTML=uploaded.map(f=>{
+      const isImg=/\.(jpg|jpeg|png|gif|webp)$/i.test(f.url);
+      return isImg?`<img src="${f.url}" style="max-width:100%;border-radius:6px;margin:6px 0" />`:`<a href="${f.url}" target="_blank">📎 ${f.name}</a>`;
+    }).join('');
+  }else{
+    filesEl.innerHTML='';
+  }
+  document.getElementById('previewModal').classList.add('show');
+}
+
+async function previewItem(id){
+  const res=await fetch('/api/item/'+id);
+  const i=await res.json();
+  document.getElementById('previewTitle').textContent=i.title;
+  document.getElementById('previewContent').textContent=i.content||'(空)';
+  const filesEl=document.getElementById('previewFiles');
+  if(i.files&&i.files.length){
+    filesEl.innerHTML=i.files.map(f=>{
+      const isImg=/\.(jpg|jpeg|png|gif|webp)$/i.test(f.url);
+      return isImg?`<img src="${f.url}" style="max-width:100%;border-radius:6px;margin:6px 0" />`:`<a href="${f.url}" target="_blank">📎 ${f.name}</a>`;
+    }).join('');
+  }else{filesEl.innerHTML=''}
+  document.getElementById('previewModal').classList.add('show');
+}
+
+function closePreview(){document.getElementById('previewModal').classList.remove('show')}
+function clearForm(){document.getElementById('title').value='';document.getElementById('content').value='';uploaded=[];renderFiles();document.getElementById('fileUrls').innerHTML='';setTip('')}
+function setTip(t){document.getElementById('statusTip').textContent=t}
+</script>
+</body>
+</html>

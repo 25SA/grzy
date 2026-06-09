@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>我的分享</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Microsoft YaHei',PingFang SC,sans-serif}
+body{background:#f5f5f5;min-height:100vh}
+.page{display:none;padding:16px;max-width:600px;margin:0 auto;padding-bottom:80px}
+.page.active{display:block}
+
+/* 头部 */
+.header{display:flex;justify-content:space-between;align-items:center;padding:16px 0;margin-bottom:8px}
+.header h1{font-size:18px;font-weight:600;color:#1a1a1a}
+.header a{color:#1C3A5E;font-size:13px;text-decoration:none}
+
+/* 卡片 */
+.card{background:#fff;border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer}
+.card-title{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.card-time{font-size:11px;color:#999;margin-bottom:6px}
+.card-preview{font-size:13px;color:#555;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* 表单 */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-weight:600;color:#333;font-size:13px;margin-bottom:5px}
+.form-group input,.form-group textarea{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;outline:none}
+.form-group input:focus,.form-group textarea:focus{border-color:#1C3A5E}
+.form-group textarea{min-height:100px;resize:vertical;line-height:1.6}
+
+/* 登录 */
+#loginPage{text-align:center;padding-top:120px}
+#loginPage .logo{font-size:40px;margin-bottom:12px}
+#loginPage p{color:#999;font-size:13px;margin-bottom:20px}
+#loginPage input{padding:10px 14px;font-size:15px;border:1px solid #ddd;border-radius:6px;width:200px;outline:none;margin-bottom:14px}
+#loginPage input:focus{border-color:#1C3A5E}
+#loginPage button{padding:10px 40px;font-size:15px;background:#1C3A5E;color:#fff;border:none;border-radius:6px;cursor:pointer}
+.err{color:#e74c3c;font-size:13px;display:none;margin-top:6px}
+
+/* 按钮 */
+.btn{padding:9px 22px;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-primary{background:#1C3A5E;color:#fff}
+.btn-outline{background:transparent;border:1px solid #ddd;color:#666}
+.btn-danger{background:#e74c3c;color:#fff}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* 文件上传 */
+.file-area{border:2px dashed #ddd;border-radius:8px;padding:16px;text-align:center;cursor:pointer;color:#999;font-size:12px;margin-bottom:10px}
+.file-area:hover{border-color:#1C3A5E;color:#1C3A5E}
+.file-tag{background:#eef2f7;border-radius:4px;padding:4px 10px;font-size:11px;display:inline-flex;align-items:center;gap:4px;margin:3px}
+.file-tag .del{color:#e74c3c;cursor:pointer;font-weight:700}
+
+/* 底部导航 */
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e8e8;display:flex;padding:6px 0;padding-bottom:env(safe-area-inset-bottom,6px);z-index:10}
+.tab{flex:1;text-align:center;font-size:11px;color:#999;cursor:pointer;padding:4px 0}
+.tab .icon{font-size:20px;display:block;margin-bottom:2px}
+.tab.active{color:#1C3A5E;font-weight:600}
+
+/* 预览弹窗 */
+.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:100;justify-content:center;align-items:center}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.modal-box h2{font-size:17px;margin-bottom:8px}
+.modal-box .content{font-size:14px;line-height:1.7;color:#333;white-space:pre-wrap;margin-bottom:12px}
+.modal-box .files img{max-width:100%;border-radius:6px;margin:4px 0}
+.modal-box .files a{display:inline-block;background:#f0f4f8;padding:6px 12px;border-radius:6px;color:#1C3A5E;text-decoration:none;font-size:12px;margin:3px}
+.modal-close{float:right;cursor:pointer;font-size:22px;color:#999;margin-top:-4px}
+
+/* 空状态 */
+.empty{text-align:center;color:#bbb;margin-top:80px;font-size:14px}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:200;display:none;white-space:nowrap}
+.toast.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="loginPage" class="page active">
+  <div class="logo">📦</div>
+  <p>我的分享 · 管理后台</p>
+  <input type="password" id="loginPwd" placeholder="输入管理密码" />
+  <br/>
+  <button onclick="login()">进入</button>
+  <div class="err" id="loginErr">密码错误</div>
+</div>
+
+<!-- 主页 -->
+<div id="homePage" class="page">
+  <div class="header">
+    <h1>📦 我的分享</h1>
+    <a href="javascript:showPage('publishPage')" id="addBtn">+ 新建</a>
+  </div>
+  <div id="itemList"></div>
+</div>
+
+<!-- 发布页 -->
+<div id="publishPage" class="page">
+  <div class="header">
+    <a href="javascript:showPage('homePage')" style="color:#1C3A5E;font-size:14px;text-decoration:none">← 返回</a>
+    <h1 style="font-size:16px">发布内容</h1>
+    <div></div>
+  </div>
+
+  <div class="form-group">
+    <label>标题</label>
+    <input type="text" id="pubTitle" placeholder="输入标题" />
+  </div>
+  <div class="form-group">
+    <label>正文</label>
+    <textarea id="pubContent" placeholder="写内容..."></textarea>
+  </div>
+  <div class="form-group">
+    <label>上传文件/图片</label>
+    <div class="file-area" onclick="document.getElementById('fileInput').click()">📁 点击选择</div>
+    <input type="file" id="fileInput" multiple style="display:none" onchange="handleFiles(this.files)" />
+    <div id="fileTags"></div>
+  </div>
+  <div class="flex">
+    <button class="btn btn-primary" onclick="previewItem()">👁️ 预览</button>
+    <button class="btn btn-primary" onclick="publishItem()" id="pubBtn">📤 发布</button>
+    <button class="btn btn-outline" onclick="clearForm()">清空</button>
+  </div>
+  <div id="statusTip" style="font-size:12px;color:#999;margin-top:8px"></div>
+</div>
+
+<!-- 底部导航 -->
+<div class="tabbar" id="tabbar" style="display:none">
+  <div class="tab active" onclick="showPage('homePage')">
+    <span class="icon">🏠</span>首页
+  </div>
+  <div class="tab" onclick="showPage('publishPage')">
+    <span class="icon">✏️</span>发布
+  </div>
+  <div class="tab" onclick="showSettings()">
+    <span class="icon">⚙️</span>设置
+  </div>
+</div>
+
+<!-- 预览弹窗 -->
+<div class="modal" id="previewModal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <h2 id="prevTitle"></h2>
+    <div class="content" id="prevContent"></div>
+    <div class="files" id="prevFiles"></div>
+  </div>
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 数据管理 =====
+const PWD = '123456';
+let items = JSON.parse(localStorage.getItem('share_items') || '[]');
+let loggedIn = false;
+let uploadedFiles = [];
+
+function save(){localStorage.setItem('share_items', JSON.stringify(items))}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2000)}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='homePage') renderList();
+  if(id==='publishPage') document.getElementById('pubTitle').focus();
+}
+
+// ===== 登录 =====
+function login(){
+  const pwd=document.getElementById('loginPwd').value;
+  if(pwd===PWD){
+    loggedIn=true;
+    document.getElementById('loginPage').classList.remove('active');
+    document.getElementById('homePage').classList.add('active');
+    document.getElementById('tabbar').style.display='flex';
+    renderList();
+  }else{
+    document.getElementById('loginErr').style.display='block';
+  }
+}
+
+// ===== 列表 =====
+function renderList(){
+  const el=document.getElementById('itemList');
+  if(!items.length){
+    el.innerHTML='<div class="empty">还没有内容，去发布第一条吧 ✨</div>';
+    return;
+  }
+  el.innerHTML=items.map((i,idx)=>`<div class="card" onclick="showDetail(${idx})">
+    <div class="card-title">${i.title||'无标题'}</div>
+    <div class="card-time">${new Date(i.createdAt).toLocaleDateString('zh-CN')}</div>
+    <div class="card-preview">${(i.content||'').slice(0,80)}</div>
+  </div>`).join('');
+}
+
+function showDetail(idx){
+  const i=items[idx];
+  document.getElementById('prevTitle').textContent=i.title||'无标题';
+  document.getElementById('prevContent').textContent=i.content||'(空)';
+  let html='';
+  if(i.files){
+    i.files.forEach(f=>{
+      if(/\.(jpg|jpeg|png|gif|webp)$/i.test(f.url||f.dataUrl||'')){
+        html+=`<img src="${f.dataUrl||f.url}" style="max-width:100%;border-radius:6px;margin:4px 0" />`;
+      }else{
+        html+=`<span style="display:inline-block;background:#f0f4f8;padding:6px 12px;border-radius:6px;font-size:12px;margin:3px">📎 ${f.name||'文件'}</span>`;
+      }
+    });
+  }
+  html+=`<br><br><button class="btn btn-danger btn-sm" onclick="if(confirm('删除？')){items.splice(${idx},1);save();renderList();closeModal();toast('已删除')}">🗑️ 删除</button>`;
+  html+=`<button class="btn btn-outline btn-sm" style="margin-left:8px" onclick="copyShare(${idx})">📋 复制分享内容</button>`;
+  document.getElementById('prevFiles').innerHTML=html;
+  document.getElementById('previewModal').classList.add('show');
+}
+
+function copyShare(idx){
+  const i=items[idx];
+  let txt=`${i.title}\n${i.content}`;
+  if(i.files&&i.files.length) txt+='\n[含附件]';
+  navigator.clipboard.writeText(txt).then(()=>{toast('已复制到剪贴板');closeModal()}).catch(()=>toast('复制失败'));
+}
+
+// ===== 文件上传（转 base64） =====
+function handleFiles(files){
+  for(const f of files){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      uploadedFiles.push({name:f.name,dataUrl:e.target.result});
+      renderFileTags();
+      toast('已添加：'+f.name);
+    };
+    reader.readAsDataURL(f);
+  }
+}
+
+function renderFileTags(){
+  const el=document.getElementById('fileTags');
+  el.innerHTML=uploadedFiles.map((f,i)=>{
+    const isImg=/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name);
+    return `<span class="file-tag">${isImg?'🖼️':'📎'} ${f.name} <span class="del" onclick="uploadedFiles.splice(${i},1);renderFileTags()">✕</span></span>`;
+  }).join('');
+}
+
+// ===== 预览 =====
+function previewItem(){
+  const title=document.getElementById('pubTitle').value.trim()||'无标题';
+  const content=document.getElementById('pubContent').value.trim();
+  document.getElementById('prevTitle').textContent=title;
+  document.getElementById('prevContent').textContent=content||'(空)';
+  let html='';
+  uploadedFiles.forEach(f=>{
+    if(/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name)){
+      html+=`<img src="${f.dataUrl}" style="max-width:100%;border-radius:6px;margin:4px 0" />`;
+    }else{
+      html+=`<span style="display:inline-block;background:#f0f4f8;padding:6px 12px;border-radius:6px;font-size:12px;margin:3px">📎 ${f.name}</span>`;
+    }
+  });
+  document.getElementById('prevFiles').innerHTML=html;
+  document.getElementById('previewModal').classList.add('show');
+}
+
+// ===== 发布 =====
+function publishItem(){
+  const title=document.getElementById('pubTitle').value.trim()||'无标题';
+  const content=document.getElementById('pubContent').value.trim();
+  if(!content&&!uploadedFiles.length){toast('请填写内容或上传文件');return}
+  const item={
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    title,
+    content,
+    files: uploadedFiles.map(f=>({name:f.name,dataUrl:f.dataUrl})),
+    createdAt: new Date().toISOString()
+  };
+  items.unshift(item);
+  save();
+  clearForm();
+  showPage('homePage');
+  toast('✅ 已发布！');
+}
+
+function clearForm(){
+  document.getElementById('pubTitle').value='';
+  document.getElementById('pubContent').value='';
+  uploadedFiles=[];
+  renderFileTags();
+  document.getElementById('statusTip').textContent='';
+  document.getElementById('pubBtn').disabled=false;
+}
+
+function showSettings(){
+  document.getElementById('prevTitle').textContent='设置';
+  document.getElementById('prevContent').textContent='';
+  document.getElementById('prevFiles').innerHTML=`
+    <div style="font-size:14px;color:#333;line-height:2">
+      已发布：${items.length} 条<br/>
+      数据存储在手机本地，清除浏览器数据会丢失<br/>
+      <br/>
+      <button class="btn btn-outline" onclick="exportData()">📤 导出数据</button>
+      <button class="btn btn-danger" onclick="if(confirm('确定清空所有数据？')){items=[];save();renderList();toast('已清空');closeModal()}">🗑️ 清空所有</button>
+    </div>
+  `;
+  document.getElementById('previewModal').classList.add('show');
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='我的分享_数据备份.json';
+  a.click();
+  toast('已导出');
+}
+
+function closeModal(){document.getElementById('previewModal').classList.remove('show')}
+
+// 回车登录
+document.getElementById('loginPwd').addEventListener('keydown',e=>{if(e.key==='Enter') login()});
+</script>
+</body>
+</html>
