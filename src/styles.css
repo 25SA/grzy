@@ -805,6 +805,59 @@ h1 em,
   overflow: hidden;
 }
 
+.practice-carousel {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+.practice-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.practice-carousel-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: practiceScroll 42s linear infinite;
+  will-change: transform;
+}
+
+.practice-card:nth-child(2) .practice-carousel-track {
+  animation-duration: 54s;
+}
+
+.practice-carousel:hover .practice-carousel-track {
+  animation-play-state: paused;
+}
+
+.practice-carousel img {
+  flex: 0 0 clamp(250px, 21vw, 360px);
+  width: clamp(250px, 21vw, 360px);
+}
+
+.practice-count {
+  position: absolute;
+  z-index: 3;
+  top: 20px;
+  right: 20px;
+  padding: 7px 10px;
+  background: rgba(8, 18, 31, 0.68);
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes practiceScroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 .practice-image::after {
   content: "";
   position: absolute;
@@ -820,7 +873,6 @@ h1 em,
 }
 
 .practice-card:hover .practice-image img {
-  transform: scale(1.04);
   filter: saturate(1) brightness(0.96);
 }
 
@@ -1410,6 +1462,38 @@ body.modal-open {
 
 .share-close span {
   font-size: 22px;
+}
+
+.privacy-shield {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  background: #08121f;
+  color: #fff;
+  text-align: center;
+}
+
+.privacy-shield strong {
+  font-family: var(--serif);
+  font-size: clamp(24px, 4vw, 46px);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.privacy-shield span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+
+img,
+video {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .article-modal {
@@ -2475,5 +2559,9 @@ html[data-theme="business"] .contact-orbit {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .practice-carousel-track {
+    animation: none;
   }
 }

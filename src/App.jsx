@@ -64,7 +64,10 @@ const practices = [
     period: "2023.09 — 2023.12",
     tag: "教育 · 公益",
     copy: "深入民族地区教育一线，承担教学工作。在真实课堂中练习表达、倾听与协作，积累跨文化沟通和基层实践经验。",
-    image: "zhijiao-03.webp",
+    images: Array.from(
+      { length: 8 },
+      (_, index) => `practice-zhijiao-${String(index + 1).padStart(2, "0")}.webp`,
+    ),
   },
   {
     no: "02",
@@ -72,7 +75,10 @@ const practices = [
     period: "2024.07",
     tag: "走访 · 连接",
     copy: "参与校友走访与深度交流，在城市、行业与个体经验的交汇中拓展认知，并重新理解大学共同体的意义。",
-    image: "huanan-05.webp",
+    images: Array.from(
+      { length: 11 },
+      (_, index) => `practice-huanan-${String(index + 1).padStart(2, "0")}.webp`,
+    ),
   },
   {
     no: "03",
@@ -140,7 +146,6 @@ const themes = [
 ];
 
 const shareCardUrl = `${import.meta.env.BASE_URL}homepage-share-card.png`;
-const shareCardName = "华志明-个人主页.png";
 
 const notes = [
   {
@@ -224,6 +229,7 @@ function App() {
   const [activeArticle, setActiveArticle] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareStatus, setShareStatus] = useState("");
+  const [privacyShield, setPrivacyShield] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem("site-theme") || "dark");
   const educationVideoRef = useRef(null);
@@ -264,6 +270,38 @@ function App() {
     localStorage.setItem("site-theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    let shieldTimer;
+    const showShield = () => {
+      setPrivacyShield(true);
+      window.clearTimeout(shieldTimer);
+      shieldTimer = window.setTimeout(() => setPrivacyShield(false), 1400);
+    };
+    const protectShortcut = (event) => {
+      const key = event.key.toLowerCase();
+      const blockedSave = (event.ctrlKey || event.metaKey) && (key === "s" || key === "p");
+      if (event.key === "PrintScreen" || blockedSave) {
+        event.preventDefault();
+        showShield();
+      }
+    };
+    const blockMediaAction = (event) => {
+      if (event.target.closest("img, video")) event.preventDefault();
+    };
+
+    document.addEventListener("contextmenu", blockMediaAction);
+    document.addEventListener("dragstart", blockMediaAction);
+    window.addEventListener("keydown", protectShortcut, true);
+    window.addEventListener("keyup", protectShortcut, true);
+    return () => {
+      window.clearTimeout(shieldTimer);
+      document.removeEventListener("contextmenu", blockMediaAction);
+      document.removeEventListener("dragstart", blockMediaAction);
+      window.removeEventListener("keydown", protectShortcut, true);
+      window.removeEventListener("keyup", protectShortcut, true);
+    };
+  }, []);
+
   const playEducationVideo = async () => {
     if (!educationVideoRef.current) return;
     educationVideoRef.current.muted = false;
@@ -272,45 +310,25 @@ function App() {
     setEducationPlaying(true);
   };
 
-  const downloadShareCard = () => {
-    const link = document.createElement("a");
-    link.href = shareCardUrl;
-    link.download = shareCardName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setShareStatus("分享图片已开始下载");
-  };
-
   const shareHomepage = async () => {
     setShareStatus("");
+    const shareData = {
+      title: "华志明的个人主页",
+      text: "我与我，周旋久，宁作我。往前看，向上走，在路上。",
+      url: "https://25sa.github.io/grzy/",
+    };
     try {
-      const response = await fetch(shareCardUrl);
-      if (!response.ok) throw new Error("图片加载失败");
-      const file = new File([await response.blob()], shareCardName, { type: "image/png" });
-      const prefersSystemShare =
-        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-        (navigator.maxTouchPoints > 1 && window.innerWidth <= 900);
-
-      if (
-        prefersSystemShare &&
-        navigator.share &&
-        (!navigator.canShare || navigator.canShare({ files: [file] }))
-      ) {
-        await navigator.share({
-          title: "华志明的个人主页",
-          text: "我与我，周旋久，宁作我。往前看，向上走，在路上。",
-          url: "https://25sa.github.io/grzy/",
-          files: [file],
-        });
+      if (navigator.share) {
+        await navigator.share(shareData);
         setShareStatus("分享面板已打开");
         return;
       }
+      await navigator.clipboard.writeText(shareData.url);
+      setShareStatus("主页链接已复制");
     } catch (error) {
       if (error?.name === "AbortError") return;
+      setShareStatus("请扫描二维码访问主页");
     }
-
-    downloadShareCard();
   };
 
   return (
@@ -447,7 +465,11 @@ function App() {
             {practices.map((item) => (
               <article className="practice-card" key={item.title}>
                 <div className="practice-image">
-                  <img src={item.image} alt={item.title} />
+                  {item.images ? (
+                    <PracticeCarousel images={item.images} title={item.title} />
+                  ) : (
+                    <img src={item.image} alt={item.title} draggable="false" />
+                  )}
                   <span>{item.tag}</span>
                 </div>
                 <div className="practice-info">
@@ -493,10 +515,13 @@ function App() {
               <div className="life-media-frame">
                 <video
                   controls
+                  controlsList="nodownload noremoteplayback"
+                  disablePictureInPicture
                   playsInline
                   preload="metadata"
                   poster="record_3.webp"
-                  src="life-record-final.mp4"
+                  src="life-record-silent.mp4"
+                  muted
                 />
                 <span className="media-kicker">13 FRAMES · 31 SECONDS</span>
               </div>
@@ -506,7 +531,7 @@ function App() {
                 <h3>{lifeTabs[0].title}</h3>
                 <p>{lifeTabs[0].copy}</p>
                 <div className="life-line" />
-                <small>原创氛围配乐 · 推拉镜头 · 复合转场</small>
+                <small>静音影像 · 推拉镜头 · 复合转场</small>
               </div>
             </div>
           )}
@@ -524,9 +549,17 @@ function App() {
                 {politicsMedia.map((item, index) => (
                   <figure className={index === 0 ? "politics-item featured" : "politics-item"} key={item.src}>
                     {item.type === "video" ? (
-                      <video controls playsInline preload="metadata" poster={item.poster} src={item.src} />
+                      <video
+                        controls
+                        controlsList="nodownload noremoteplayback"
+                        disablePictureInPicture
+                        playsInline
+                        preload="metadata"
+                        poster={item.poster}
+                        src={item.src}
+                      />
                     ) : (
-                      <img src={item.src} alt={item.title} />
+                      <img src={item.src} alt={item.title} draggable="false" />
                     )}
                     <figcaption>
                       <span>{item.meta}</span>
@@ -552,7 +585,7 @@ function App() {
                   <article className="note-card" key={note.title}>
                     <button type="button" onClick={() => setActiveArticle(note)}>
                       <div className="note-cover">
-                        <img src={note.cover} alt={`${note.title}原稿`} />
+                        <img src={note.cover} alt={`${note.title}原稿`} draggable="false" />
                         <span>0{index + 1}</span>
                       </div>
                       <div className="note-info">
@@ -656,14 +689,41 @@ function App() {
               <h2 id="share-title">分享我的个人主页</h2>
               <span>扫码可在手机或电脑浏览完整主页。</span>
               <button type="button" onClick={shareHomepage}>
-                分享或下载图片
+                分享主页
               </button>
               {shareStatus && <small role="status">{shareStatus}</small>}
             </div>
           </section>
         </div>
       )}
+      {privacyShield && (
+        <div className="privacy-shield" role="alert">
+          <strong>媒体内容已受保护</strong>
+          <span>本页面不提供下载、保存或截图权限</span>
+        </div>
+      )}
     </main>
+  );
+}
+
+function PracticeCarousel({ images, title }) {
+  const loopImages = [...images, ...images];
+
+  return (
+    <div className="practice-carousel" aria-label={`${title}照片滚动展示`}>
+      <div className="practice-carousel-track">
+        {loopImages.map((image, index) => (
+          <img
+            src={image}
+            alt={`${title}照片 ${(index % images.length) + 1}`}
+            draggable="false"
+            loading="lazy"
+            key={`${image}-${index}`}
+          />
+        ))}
+      </div>
+      <span className="practice-count">{String(images.length).padStart(2, "0")} PHOTOS</span>
+    </div>
   );
 }
 
@@ -689,6 +749,7 @@ function EducationMedia({
           key={item.media[middleSlide]}
           src={item.media[middleSlide]}
           alt={`${item.school}回忆 ${middleSlide + 1}`}
+          draggable="false"
         />
         <div className="gallery-controls">
           <button type="button" onClick={previous} aria-label="上一张照片">
@@ -725,6 +786,8 @@ function EducationMedia({
         poster={selectedVideo.poster}
         playsInline
         controls={isPlaying}
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture
         preload="metadata"
         onEnded={onEnded}
       />
