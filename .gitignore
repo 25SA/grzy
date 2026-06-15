@@ -1,0 +1,4 @@
+.media-originals/
+.tools/
+node_modules/
+dist/
