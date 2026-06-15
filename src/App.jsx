@@ -87,14 +87,6 @@ const practices = [
       (_, index) => `practice-huanan-${String(index + 1).padStart(2, "0")}.webp`,
     ),
   },
-  {
-    no: "03",
-    title: "疫情防控志愿服务",
-    period: "2022 — 2023",
-    tag: "社区 · 志愿",
-    copy: "参与社区信息登记、秩序维护与物资分发。公共责任并不抽象，它存在于每一次具体、微小但必要的行动里。",
-    image: "yizhi-quarantine.webp",
-  },
 ];
 
 const lifeTabs = [
