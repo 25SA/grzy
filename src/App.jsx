@@ -24,14 +24,21 @@ const education = [
     mediaType: "video",
     videos: [
       {
-        label: "毕业留影",
-        video: "gaosan-biyel.mp4",
-        poster: "gaosan-biyel-poster.webp",
-      },
-      {
         label: "青春纪念",
         video: "gaosan-jinian.mp4",
         poster: "gaosan-jinian-poster.webp",
+        credit: "来源同学",
+      },
+      {
+        label: "高中回忆",
+        video: "gaosan-memory.mp4",
+        poster: "gaosan-memory-poster.webp",
+      },
+      {
+        label: "同窗记忆",
+        video: "gaosan-classmate.mp4",
+        poster: "gaosan-classmate-poster.webp",
+        credit: "来源同学",
       },
     ],
   },
@@ -622,9 +629,9 @@ function App() {
               <strong>2290617364@qq.com</strong>
               <b>↗</b>
             </a>
-            <a href="mailto:32b5b5cb2335@gmail.com">
+            <a href="mailto:zh2149@hotmail.com">
               <span>备用邮箱</span>
-              <strong>32b5b5cb2335@gmail.com</strong>
+              <strong>zh2149@hotmail.com</strong>
               <b>↗</b>
             </a>
           </div>
@@ -806,8 +813,11 @@ function EducationMedia({
             onClick={() => changeVideo(index)}
             key={video.video}
           >
-            <span>0{index + 1}</span>
-            {video.label}
+            <span className="video-switcher-index">0{index + 1}</span>
+            <span className="video-switcher-copy">
+              <strong>{video.label}</strong>
+              {video.credit && <small>{video.credit}</small>}
+            </span>
           </button>
         ))}
       </div>
