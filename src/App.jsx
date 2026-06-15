@@ -144,8 +144,6 @@ const themes = [
   { key: "business", label: "商务正式", short: "商" },
 ];
 
-const shareCardUrl = `${import.meta.env.BASE_URL}homepage-share-card.png`;
-
 const notes = [
   {
     title: "三个多月",
@@ -226,8 +224,6 @@ function App() {
   const [middleSlide, setMiddleSlide] = useState(0);
   const [activeLife, setActiveLife] = useState(0);
   const [activeArticle, setActiveArticle] = useState(null);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [shareStatus, setShareStatus] = useState("");
   const [privacyShield, setPrivacyShield] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem("site-theme") || "dark");
@@ -251,10 +247,9 @@ function App() {
   }, [activeEducation]);
 
   useEffect(() => {
-    if (!activeArticle && !shareOpen) return undefined;
+    if (!activeArticle) return undefined;
     const onKeyDown = (event) => {
       if (event.key === "Escape") setActiveArticle(null);
-      if (event.key === "Escape") setShareOpen(false);
     };
     document.body.classList.add("modal-open");
     window.addEventListener("keydown", onKeyDown);
@@ -262,7 +257,7 @@ function App() {
       document.body.classList.remove("modal-open");
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [activeArticle, shareOpen]);
+  }, [activeArticle]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -309,27 +304,6 @@ function App() {
     setEducationPlaying(true);
   };
 
-  const shareHomepage = async () => {
-    setShareStatus("");
-    const shareData = {
-      title: "华志明的个人主页",
-      text: "我与我，周旋久，宁作我。往前看，向上走，在路上。",
-      url: "https://25sa.github.io/grzy/",
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        setShareStatus("分享面板已打开");
-        return;
-      }
-      await navigator.clipboard.writeText(shareData.url);
-      setShareStatus("主页链接已复制");
-    } catch (error) {
-      if (error?.name === "AbortError") return;
-      setShareStatus("请扫描二维码访问主页");
-    }
-  };
-
   return (
     <main>
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
@@ -343,9 +317,6 @@ function App() {
           <a href="#life">生活</a>
         </nav>
         <div className="header-actions">
-          <button className="nav-share" type="button" onClick={() => setShareOpen(true)}>
-            分享主页
-          </button>
           <div className="theme-switcher" role="group" aria-label="网站风格">
             {themes.map((item) => (
               <button
@@ -668,33 +639,6 @@ function App() {
         </div>
       )}
 
-      {shareOpen && (
-        <div className="share-modal" role="dialog" aria-modal="true" aria-labelledby="share-title">
-          <button
-            className="share-backdrop"
-            type="button"
-            aria-label="关闭分享图片"
-            onClick={() => setShareOpen(false)}
-          />
-          <section className="share-panel">
-            <button className="share-close" type="button" onClick={() => setShareOpen(false)}>
-              关闭 <span>×</span>
-            </button>
-            <div className="share-preview">
-              <img src={shareCardUrl} alt="华志明个人主页分享图片，包含头像、姓名、签名和二维码" />
-            </div>
-            <div className="share-copy">
-              <p>SHARE PERSONAL HOMEPAGE</p>
-              <h2 id="share-title">分享我的个人主页</h2>
-              <span>扫码可在手机或电脑浏览完整主页。</span>
-              <button type="button" onClick={shareHomepage}>
-                分享主页
-              </button>
-              {shareStatus && <small role="status">{shareStatus}</small>}
-            </div>
-          </section>
-        </div>
-      )}
       {privacyShield && (
         <div className="privacy-shield" role="alert">
           <strong>媒体内容已受保护</strong>
