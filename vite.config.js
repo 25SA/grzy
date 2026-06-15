@@ -5,4 +5,12 @@ export default defineConfig({
   base: "./",
   plugins: [react()],
   publicDir: "images",
+  build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        share: "share.html",
+      },
+    },
+  },
 });
